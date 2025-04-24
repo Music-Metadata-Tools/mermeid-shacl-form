@@ -3,6 +3,15 @@
 .property-instance:not(:first-child) > label { visibility: hidden; max-height: 0; }
 .mode-edit .property-instance label { width: var(--label-width); }
 
-.add-icon-button {
-    color: green;
-  }
+
+shacl-node h1 { font-size: 1.4rem; }
+
+.shacl-group.collapsible.open { background-color: #b9daf5; }
+
+.collapsible > .activator { padding: 20px 25px; margin: 0; background-color: #b9daf5; }
+.collapsible > .activator:hover, .collapsible.open > .activator { background-color: #7dbef3; }
+
+.collapsible > shacl-property { padding-left: 50px; }
+.property-instance, .shacl-or-constraint { padding-left: 50px; }
+
+.add-icon-button { color: green; }
