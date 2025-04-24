@@ -6,6 +6,7 @@ module.exports = [
             'form-default': './src/form-default.ts',
             'form-material': './src/form-material.ts',
             'form-bootstrap': './src/form-bootstrap.ts',
+            'form-mermeid': './src/form-mermeid.ts',
             'plugins/mapbox': './src/plugins/mapbox.ts',
             'plugins/leaflet': './src/plugins/leaflet.ts',
             'plugins/fixed-list': './src/plugins/fixed-list.ts',
