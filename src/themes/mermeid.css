@@ -2,3 +2,7 @@
 .property-instance label { display: inline-block; word-break: break-word; line-height: 1em; padding-top: 0.15em; padding-right: 1em; flex-shrink: 0; position: relative; }
 .property-instance:not(:first-child) > label { visibility: hidden; max-height: 0; }
 .mode-edit .property-instance label { width: var(--label-width); }
+
+.add-icon-button {
+    color: green;
+  }
