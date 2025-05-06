@@ -4,7 +4,6 @@ import { Editor, InputListEntry, Theme } from "../theme"
 import { PREFIX_XSD } from '../constants'
 import { Literal } from 'n3'
 import css from './mermeid.css?raw'
-import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.17.1/cdn/shoelace.js"
 
 export class MermeidTheme extends Theme {
     idCtr = 0
@@ -33,14 +32,14 @@ export class MermeidTheme extends Theme {
             editor.disabled = true
         }
         editor.value = value?.value || template?.defaultValue?.value || ''
-    
+
         const labelElem = document.createElement('label')
         labelElem.htmlFor = editor.id
         labelElem.innerText = label
         if (template?.description) {
             labelElem.setAttribute('title', template.description.value)
         }
-    
+
         const placeholder = template?.description ? template.description.value : template?.pattern ? template.pattern : null
         if (placeholder) {
             editor.setAttribute('placeholder', placeholder)
@@ -49,14 +48,10 @@ export class MermeidTheme extends Theme {
             editor.setAttribute('required', 'true')
             labelElem.classList.add('required')
         }
-    
+
         const result = document.createElement('div')
         result.appendChild(labelElem)
         result.appendChild(editor)
-
-        const iconButton = this.createIconButton("plus-circle", true, "add-icon-button")
-        result.appendChild(iconButton)
-
         return result
     }
 
@@ -241,14 +236,5 @@ export class MermeidTheme extends Theme {
         button.type = 'button'
         button.innerHTML = label
         return button
-    }
-
-    createIconButton(iconName: string, primary: boolean, cssClass?: string): HTMLElement {
-        const iconButton = document.createElement('sl-icon-button')
-        iconButton.setAttribute('name', iconName)
-        if (cssClass) {
-            iconButton.classList.add(cssClass)
-        }
-        return iconButton
     }
 }
