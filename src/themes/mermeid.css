@@ -1,19 +1,38 @@
+form { margin-right: 10px; }
+
+shacl-node h1 { font-size: 1.4rem; color: darkslategrey}
+shacl-node .add-button { font-size: 1.2rem; color: darkslategrey; background-color: #b9daf5; border: 2px solid darkslategrey; border-radius: 5px; padding: 5px 8px; }
+shacl-node .add-button:before { content: 'Add '; }
+shacl-node .add-button:hover { color: darkslategrey; background-color: #7dbef3; border: 2px solid darkslategrey; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+
+/* margin below add-button */
+.add-button:not([hidden]):not([style*="display: none"]) { margin-bottom: 50px; }
+.collapsible:not(.open) .add-button { margin-bottom: 0px; }
+
+.shacl-group { margin-bottom: 0em; padding-bottom: 0em; }
+.shacl-group.collapsible.open { margin-bottom: 50px; background: #f5f5f5; padding-bottom: 30px; box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.3); }
+
+.collapsible > .activator { padding: 20px 25px; margin-top: 0; background-color: #b9daf5; border: 2px solid darkslategrey; width: 100%; }
+.collapsible > .activator:hover, .collapsible.open > .activator { background-color: #7dbef3; box-shadow: 0 5px 10px rgba(0,0,0,0.5); width: 101%; margin-left: -0.5%; position: relative; z-index: 1; }
+
+.collapsible > shacl-property { margin-left: 50px; }
+shacl-property.collapsible.open { background-color: #ebebeb; margin-bottom: 30px; }
+.collapsible:not(.open) shacl-property.collapsible.open { margin-bottom: 0px; }
+
+/* invalidate inherited style */
+.collapsible.open > .property-instance:nth-child(odd) { background-color: transparent; }
+
 .property-instance label { display: inline-block; word-break: break-word; line-height: 1em; padding-top: 0.15em; padding-right: 1em; flex-shrink: 0; position: relative; }
-.property-instance:not(:first-child) > label { visibility: hidden; max-height: 0; }
 .mode-edit .property-instance label { width: var(--label-width); }
+.property-instance label, .property-instance label[title] { cursor: default; text-decoration: None; font-weight: 500; }
 
+.property-instance, .shacl-or-constraint .property-instance { padding-left: 40px; padding-right: 20px; padding-top: 10px; }
+.property-instance.valid::before { font-size: 2.0rem; left: calc(var(--label-width) - 2.6em); top: 2px; }
 
-shacl-node h1 { font-size: 1.4rem; }
+.editor:not([type='checkbox']), .shacl-or-constraint select { font-size: 1.0rem; flex-grow: 0; border-radius: 4px; border: solid 0.5px gray; }
+input.editor { width: 50%; }
+select.editor { width: 30%; }
+.shacl-or-constraint * > select.editor { width: 50%; }
+textarea.editor { width: 60%; }
 
-.shacl-group.collapsible.open { background-color: #b9daf5; }
-
-.collapsible > .activator { padding: 20px 25px; margin-top: 0; margin-bottom: 20px; background-color: #b9daf5; }
-.collapsible > .activator:hover, .collapsible.open > .activator { background-color: #7dbef3; }
-
-.collapsible > shacl-property { padding-left: 50px; }
-.property-instance, .shacl-or-constraint .property-instance { display: flex; align-items: center; gap: 10px; padding-left: 50px; }
-
-.property-instance.valid::before { font-size: 2.0rem; left: calc(var(--label-width) - 2em); top: 2px; }
-.editor:not([type='checkbox']) { font-size: 1.0rem; border: 1px solid #DDD; }
-
-.add-icon-button { color: green; }
+.lang-chooser { font-size: 0.7em; top: 8px; right: 30px; padding: 4px 6px; border-radius: 4px; border: solid 0.5px gray; }
