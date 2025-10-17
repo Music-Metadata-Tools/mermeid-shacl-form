@@ -9,8 +9,8 @@ build:
   stage: build
   script:
     - node --version
-    - npm install
-    - npx webpack
+    - npm install typescript
+    - npm run build
   artifacts:
     paths:
       - dist/
