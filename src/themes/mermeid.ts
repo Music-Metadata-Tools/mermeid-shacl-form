@@ -7,6 +7,8 @@ import { Term as N3Term }  from 'n3'
 import css from './mermeid.css?raw'
 import { RokitInput, RokitSelect, RokitTextArea } from '@ro-kit/ui-widgets'
 
+// Theme copied from default.ts. Refer to it for changes and updates.
+
 export class MermeidTheme extends Theme {
     idCtr = 0
 
