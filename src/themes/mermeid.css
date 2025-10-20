@@ -1,3 +1,7 @@
+:host {
+    --rokit-light-background-color-inner: #b9daf5;
+}
+
 form { margin-right: 10px; }
 
 shacl-node h1 { font-size: 1.4rem; color: darkslategrey}
@@ -14,8 +18,6 @@ shacl-node .add-button:hover { color: darkslategrey; background-color: #7dbef3; 
 
 .collapsible { padding: 20px 25px; margin-top: 0; background-color: #b9daf5; border: 2px solid darkslategrey; width: 100%; }
 .collapsible:hover, .collapsible[open] { background-color: #7dbef3; box-shadow: 0 5px 10px rgba(0,0,0,0.5); width: 101%; margin-left: -0.5%; position: relative; z-index: 1; }
-
-.collapsible::part(header), .collapsible::part(header):hover { background-color: transparent; }
 
 .collapsible > shacl-property { margin-left: 50px; }
 shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30px; }
