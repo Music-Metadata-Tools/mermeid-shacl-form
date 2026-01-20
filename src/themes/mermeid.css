@@ -66,6 +66,15 @@ rokit-collapsible[open]::part(content) {
   max-height: none;
 }
 
+/* Nur der Toggle-Button im Collapsible */
+rokit-collapsible::part(toggle) {
+  --rokit-light-background-darker-color-inner: transparent;
+  --rokit-shadow-color-inner: transparent;
+}
+
+
+
+
 
 
 
