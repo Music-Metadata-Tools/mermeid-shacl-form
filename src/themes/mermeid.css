@@ -29,6 +29,9 @@ shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30p
 .property-instance label { display: inline-block; word-break: break-word; line-height: 1em; padding-top: 0.15em; padding-right: 1em; flex-shrink: 0; position: relative; }
 .mode-edit .property-instance label { width: var(--label-width); }
 .property-instance label, .property-instance label[title] { cursor: default; text-decoration: None; font-weight: 500; }
+.property-instance .quick-add { margin-left: 6px; padding: 2px 6px; border-radius: 4px; border: 1px solid darkslategrey; background-color: #b9daf5; color: darkslategrey; cursor: pointer; }
+.property-instance .quick-add:hover { background-color: #7dbef3; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.property-instance .quick-add:focus { outline: 2px solid #7dbef3; outline-offset: 1px; }
 
 .property-instance, .shacl-or-constraint .property-instance { padding-left: 40px; padding-right: 20px; padding-top: 10px; }
 .property-instance.valid::before { font-size: 2.0rem; left: calc(var(--label-width) - 2.6em); top: 2px; }
@@ -40,3 +43,30 @@ select.editor { width: 30%; }
 textarea.editor { width: 60%; }
 
 .lang-chooser { font-size: 0.7em; top: 8px; right: 30px; padding: 4px 6px; border-radius: 4px; border: solid 0.5px gray; }
+
+
+rokit-collapsible {
+  --rokit-light-background-color-inner: #rgb(185, 218, 245);
+}
+
+/* gleiche Grundfarbe */
+rokit-collapsible.collapsible,
+rokit-select.add-button {
+  background: #b9daf5;
+}
+
+/* gleiche Hoverfarbe */
+rokit-collapsible.collapsible:hover,
+rokit-collapsible.collapsible[open],
+rokit-select.add-button:hover {
+  background: #7dbef3;
+}
+
+rokit-collapsible[open]::part(content) {
+  max-height: none;
+}
+
+
+
+
+
