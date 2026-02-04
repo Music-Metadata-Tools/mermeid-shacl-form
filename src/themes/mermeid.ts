@@ -210,6 +210,35 @@ export class MermeidTheme extends Theme {
         const editor = new RokitSelect()
         editor.clearable = true
         const result = this.createDefaultTemplate(label, null, required, editor, template)
+        const quickAddAllowlist = (globalThis as any).__MERMEID_ENTITY_TYPE_ALLOWLIST__ as string[] | undefined
+        if (template?.class && template.config.editMode && !template.readonly && Array.isArray(quickAddAllowlist) && quickAddAllowlist.includes(template.class.value)) {
+            const classIri = template.class.value
+            const insertQuickAddButton = () => {
+                const quickAddButton = document.createElement('button')
+                quickAddButton.type = 'button'
+                quickAddButton.classList.add('quick-add')
+                quickAddButton.title = `Create new ${label}`
+                quickAddButton.setAttribute('aria-label', `Create new ${label}`)
+                quickAddButton.innerHTML = '&#xFF0B;'
+                quickAddButton.addEventListener('click', (event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    editor.dispatchEvent(new CustomEvent('shacl-form:quick-add', {
+                        detail: {
+                            classIri,
+                            path: template.path || null,
+                            label,
+                            editorId: editor.id,
+                        },
+                        bubbles: true,
+                        composed: true,
+                    }))
+                })
+                editor.insertAdjacentElement('afterend', quickAddButton)
+
+            }
+            insertQuickAddButton()
+        }
         const ul = document.createElement('ul')
         let isFlatList = true
 
