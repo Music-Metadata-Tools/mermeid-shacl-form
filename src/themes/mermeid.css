@@ -33,8 +33,19 @@ shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30p
 .property-instance .quick-add:hover { background-color: #7dbef3; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .property-instance .quick-add:focus { outline: 2px solid #7dbef3; outline-offset: 1px; }
 
-.property-instance, .shacl-or-constraint .property-instance { padding-left: 40px; padding-right: 20px; padding-top: 10px; }
-.property-instance.valid::before { font-size: 2.0rem; left: calc(var(--label-width) - 2.6em); top: 2px; }
+.property-instance, .shacl-or-constraint .property-instance { 
+  padding-left: 0.5rem;
+  padding-top: 1rem; 
+  padding-bottom: 1rem;
+}
+.property-instance.valid::before { 
+  font-size: 2.0rem; 
+  left: calc(var(--label-width) - 3.7em); 
+  top: 0.8rem; }
+
+#input {
+  height:2em;
+}
 
 .editor:not([type='checkbox']), .shacl-or-constraint select { font-size: 1.0rem; flex-grow: 0.5; border-radius: 4px; border: solid 0.5px gray; }
 input.editor { width: 50%; }
