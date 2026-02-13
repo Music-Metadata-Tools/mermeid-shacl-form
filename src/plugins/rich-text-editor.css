@@ -53,6 +53,13 @@
     border-color: #666;
 }
 
+.rte-button.active {
+    background-color: #7dbef3;
+    border-color: #003d7a;
+    color: #003d7a;
+    font-weight: bold;
+}
+
 .rte-content {
     padding: 0.75rem;
     min-height: 150px;
