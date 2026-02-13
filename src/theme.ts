@@ -61,7 +61,7 @@ export abstract class Theme {
             valueElem = document.createElement('div')
         }
         valueElem.classList.add('d-flex')
-        valueElem.innerText = name
+        valueElem.innerHTML = name
         if (lang) {
             valueElem.appendChild(lang)
         }
@@ -76,6 +76,7 @@ export abstract class Theme {
     abstract createDateEditor(label: string, value: Term | null, required: boolean, template: ShaclPropertyTemplate): HTMLElement
     abstract createBooleanEditor(label: string, value: Term | null, required: boolean, template: ShaclPropertyTemplate): HTMLElement
     abstract createFileEditor(label: string, value: Term | null, required: boolean, template: ShaclPropertyTemplate): HTMLElement
+    abstract createRichTextEditor(label: string, value: Term | null, required: boolean, template: ShaclPropertyTemplate): HTMLElement
     abstract createButton(label: string, primary: boolean): HTMLElement
 }
 
@@ -102,6 +103,11 @@ export function fieldFactory(template: ShaclPropertyTemplate, value: Term | null
         // check if it is a langstring
         if  (template.datatype?.value === `${PREFIX_RDF}langString` || template.languageIn?.length) {
             return template.config.theme.createLangStringEditor(template.label, value, required, template)
+        }
+
+        // check if it is HTML (rich text)
+        if (template.datatype?.value === `${PREFIX_RDF}HTML`) {
+            return template.config.theme.createRichTextEditor(template.label, value, required, template)
         }
 
         switch (template.datatype?.value.replace(PREFIX_XSD, '')) {

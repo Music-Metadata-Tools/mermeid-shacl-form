@@ -69,6 +69,10 @@ export function toRDF(editor: Editor): NamedNode | Literal | undefined {
                 // if seconds in value are 0, the input field omits them which is then not a valid xsd:dateTime
                 value = new Date(value).toISOString().slice(0, 19)
             }
+            else if (editor['type'] === 'richtext') {
+                // Rich text editor with HTML content
+                // shaclDatatype should already be set to rdf:HTML
+            }
             // check if value is a typed rdf literal or langString
             if (!languageOrDatatype && typeof value === 'string') {
                 // check for typed rdf literal

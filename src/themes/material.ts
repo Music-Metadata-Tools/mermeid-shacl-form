@@ -10,6 +10,8 @@ import { PREFIX_SHACL, PREFIX_XSD, XSD_DATATYPE_STRING } from '../constants'
 import { RokitSelect } from '@ro-kit/ui-widgets'
 
 export class MaterialTheme extends Theme {
+    idCtr = 0
+
     constructor() {
         super(css)
     }
@@ -236,6 +238,177 @@ export class MaterialTheme extends Theme {
             }
         })
         return this.createDefaultTemplate(label, value, required, editor, template)
+    }
+
+    createRichTextEditor(label: string, value: Term | null, required: boolean, template: ShaclPropertyTemplate): HTMLElement {
+        const editor = document.createElement('div')
+        editor.id = `e${this.idCtr++}`
+        editor.className = 'editor'
+        editor.classList.add('rich-text-editor')
+        
+        if (template?.minCount !== undefined) {
+            editor.dataset.minCount = String(template.minCount)
+        }
+        if (required) {
+            editor.setAttribute('required', 'true')
+        }
+
+        // Store datatype and other editor properties
+        (editor as any).type = 'richtext'
+        if (template?.datatype) {
+            (editor as any).shaclDatatype = template.datatype
+            editor.setAttribute('data-shacl-datatype', template.datatype.value)
+        }
+
+        // Hidden input to store serialized HTML
+        const hiddenInput = document.createElement('input')
+        hiddenInput.type = 'hidden'
+        hiddenInput.className = 'rte-hidden-value'
+        editor.appendChild(hiddenInput)
+        
+        // Toolbar
+        const toolbar = document.createElement('div')
+        toolbar.className = 'rte-toolbar'
+        
+        const formatButtons = [
+            { command: 'bold', label: 'B', title: 'Bold (Ctrl+B)', tag: 'B' },
+            { command: 'italic', label: 'I', title: 'Italic (Ctrl+I)', tag: 'I' },
+            { command: 'underline', label: 'U', title: 'Underline (Ctrl+U)', tag: 'U' },
+            { command: 'strikeThrough', label: 'S', title: 'Strikethrough', tag: 'S' },
+        ]
+        
+        const checkFormatInSelection = (tag: string): boolean => {
+            const selection = window.getSelection()
+            if (!selection || selection.rangeCount === 0) return false
+            
+            let node = selection.anchorNode
+            while (node && node !== editableDiv) {
+                if (node.nodeName === tag || 
+                    (node.nodeName === 'STRONG' && tag === 'B') ||
+                    (node.nodeName === 'EM' && tag === 'I') ||
+                    (node.nodeName === 'DEL' && tag === 'S') || 
+                    (node.nodeName === 'STRIKE' && tag === 'S')) {
+                    return true
+                }
+                node = node.parentNode
+            }
+            return false
+        }
+        
+        const updateButtonStates = () => {
+            const buttons = toolbar.querySelectorAll('.rte-button')
+            buttons.forEach(btn => {
+                const tag = btn.getAttribute('data-tag')
+                if (tag && checkFormatInSelection(tag)) {
+                    btn.classList.add('active')
+                } else {
+                    btn.classList.remove('active')
+                }
+            })
+        }
+        
+        const createButton = (cmd: string, lbl: string, ttl: string, tag: string) => {
+            const btn = document.createElement('button')
+            btn.type = 'button'
+            btn.className = 'rte-button'
+            btn.textContent = lbl
+            btn.title = ttl
+            btn.setAttribute('data-command', cmd)
+            btn.setAttribute('data-tag', tag)
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault()
+                document.execCommand(cmd, false)
+                editableDiv.focus()
+                setTimeout(() => {
+                    updateButtonStates()
+                }, 0)
+            })
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                setTimeout(() => {
+                    updateButtonStates()
+                }, 0)
+            })
+            return btn
+        }
+        
+        formatButtons.forEach(btn => {
+            toolbar.appendChild(createButton(btn.command, btn.label, btn.title, btn.tag))
+        })
+        
+        editor.appendChild(toolbar)
+        
+        // Editable content area
+        const editableDiv = document.createElement('div')
+        editableDiv.className = 'rte-content'
+        editableDiv.contentEditable = 'true'
+        editableDiv.spellcheck = true
+        
+        if (value instanceof Literal) {
+            editableDiv.innerHTML = value.value
+        }
+        
+        // Sync content to hidden input and dispatch change
+        const syncContent = () => {
+            hiddenInput.value = editableDiv.innerHTML
+            editor.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+        
+        editableDiv.addEventListener('input', () => {
+            syncContent()
+            updateButtonStates()
+        })
+        editableDiv.addEventListener('change', () => {
+            syncContent()
+            updateButtonStates()
+        })
+        editableDiv.addEventListener('blur', () => {
+            syncContent()
+            updateButtonStates()
+        })
+        editableDiv.addEventListener('mouseup', () => {
+            updateButtonStates()
+        })
+        editableDiv.addEventListener('keyup', () => {
+            updateButtonStates()
+        })
+        
+        // Handle Enter key to insert <br> instead of new div
+        editableDiv.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                document.execCommand('insertHTML', false, '<br><br>')
+                syncContent()
+            }
+        })
+        
+        editor.appendChild(editableDiv)
+        
+        // Setup editor property getter/setter
+        Object.defineProperty(editor, 'value', {
+            get() {
+                return editableDiv.innerHTML
+            },
+            set(html: string) {
+                editableDiv.innerHTML = html
+                hiddenInput.value = html
+            }
+        })
+
+        const labelElem = document.createElement('label')
+        labelElem.htmlFor = editor.id
+        labelElem.innerText = label
+        if (template?.description) {
+            labelElem.setAttribute('title', template.description.value)
+        }
+        if (required) {
+            labelElem.classList.add('required')
+        }
+
+        const result = document.createElement('div')
+        result.appendChild(labelElem)
+        result.appendChild(editor)
+        return result
     }
 
     createButton(label: string, primary: boolean): HTMLElement {
