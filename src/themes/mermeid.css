@@ -44,10 +44,14 @@ shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30p
   top: 0.8rem; }
 
 #input {
-  height:2em;
+  height: 2em !important;
 }
 
-.editor:not([type='checkbox']), .shacl-or-constraint select { font-size: 1.0rem; flex-grow: 0.5; border-radius: 4px; border: solid 0.5px gray; }
+.editor:not([type='checkbox']), .shacl-or-constraint select { 
+  font-size: 1.0rem; 
+  border-radius: 4px; 
+  border: solid 0.5px gray; 
+}
 input.editor { width: 50%; }
 select.editor { width: 30%; }
 .shacl-or-constraint * > select.editor { width: 50%; }
