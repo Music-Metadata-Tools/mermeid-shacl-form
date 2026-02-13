@@ -44,6 +44,7 @@ textarea.editor { width: 60%; }
 
 .lang-chooser { font-size: 0.7em; top: 8px; right: 30px; padding: 4px 6px; border-radius: 4px; border: solid 0.5px gray; }
 
+.d-flex { display: block; }
 
 rokit-collapsible {
   --rokit-light-background-color-inner: #rgb(185, 218, 245);
