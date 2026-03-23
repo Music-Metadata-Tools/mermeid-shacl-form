@@ -107,9 +107,11 @@ export function resolveShaclOrConstraintOnProperty(subjects: Term[], value: Term
                         }
                     }
 
+                    // try to find matching sh:path in sh:or/sh:xone values
                     if (quad.predicate.value === `${PREFIX_SHACL}path`) {
-                        for (const type of types) {
-                            if (quad.predicate.equals(type)) {
+                        const dataQuads = config.store.getQuads(null, null, value, null)
+                        for (const dq of dataQuads) {
+                            if (quad.object.equals(dq.predicate)) {
                                 return options
                             }
                         }
