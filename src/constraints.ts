@@ -106,6 +106,14 @@ export function resolveShaclOrConstraintOnProperty(subjects: Term[], value: Term
                             }
                         }
                     }
+
+                    if (quad.predicate.value === `${PREFIX_SHACL}path`) {
+                        for (const type of types) {
+                            if (quad.predicate.equals(type)) {
+                                return options
+                            }
+                        }
+                    }
                     // try to find matching sh:class in sh:or/sh:xone values
                     if (quad.predicate.equals(SHACL_PREDICATE_CLASS)) {
                         for (const type of types) {
