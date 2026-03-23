@@ -115,6 +115,7 @@ export function resolveShaclOrConstraintOnProperty(subjects: Term[], value: Term
                                 return options
                             }
                         }
+                        console.log('Test output: ', value, options, dataQuads)
                     }
                     // try to find matching sh:class in sh:or/sh:xone values
                     if (quad.predicate.equals(SHACL_PREDICATE_CLASS)) {
