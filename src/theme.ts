@@ -57,7 +57,12 @@ export abstract class Theme {
         if (isURL(value.value)) {
             valueElem = document.createElement('a')
             valueElem.setAttribute('href', value.value)
-        } else {
+        } else if (value.value.startsWith('urn:uuid:')) {
+            valueElem = document.createElement('a')
+            valueElem.setAttribute('href', '#' + value.value)
+            valueElem.classList.add('uuid')
+        }
+        else {
             valueElem = document.createElement('div')
         }
         valueElem.classList.add('d-flex')
