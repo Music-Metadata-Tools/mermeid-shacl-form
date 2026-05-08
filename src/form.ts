@@ -34,6 +34,9 @@ export class ShaclForm extends HTMLElement {
 
     connectedCallback() {
         this.shadowRoot!.prepend(this.form)
+        window.addEventListener('owlImportsReloaded', () => {
+            this.initialize()
+        })
     }
 
     attributeChangedCallback() {
@@ -147,7 +150,6 @@ export class ShaclForm extends HTMLElement {
         this.initialize()
     }
 
-    /* Returns the validation report */
     public async validate(ignoreEmptyValues = false): Promise<any> {
         for (const elem of this.form.querySelectorAll(':scope .validation-error')) {
             elem.remove()

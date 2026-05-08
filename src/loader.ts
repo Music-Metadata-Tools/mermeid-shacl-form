@@ -11,6 +11,7 @@ import { toRDF } from 'jsonld'
 // that import the same resources
 const loadedURLCache: Record<string, Promise<string>> = {}
 const loadedClassesCache: Record<string, Promise<string>> = {}
+const owlImportsCacheUrls: Set<string> = new Set()
 
 export class Loader {
     private config: Config
@@ -19,6 +20,8 @@ export class Loader {
 
     constructor(config: Config) {
         this.config = config
+        // Listen for manual refresh requests
+        this.setupOwlImportsRefreshListener()
     }
 
     async loadGraphs() {
@@ -74,6 +77,8 @@ export class Loader {
                         // import url only once
                         if (url && this.loadedExternalUrls.indexOf(url) < 0) {
                             this.loadedExternalUrls.push(url)
+                            // Track this URL as owl:imports for cache refresh
+                            owlImportsCacheUrls.add(url)
                             // import into separate graph
                             dependencies.push(this.importRDF(this.fetchRDF(url), store, DataFactory.namedNode(url)))
                         }
@@ -173,6 +178,99 @@ export class Loader {
         }).then(resp => resp.text())
         loadedURLCache[url] = promise
         return promise
+    }
+
+    /**
+     * Clear owl:imports URLs from the cache and reset loadedExternalUrls
+     * This allows fresh data to be loaded on the next import
+     */
+    private clearOwlImportsCache(): void {
+        const clearedUrls = Array.from(owlImportsCacheUrls)
+        
+        // Remove all owl:imports URLs from the URL cache
+        owlImportsCacheUrls.forEach(url => {
+            delete loadedURLCache[url]
+        })
+        
+        // Remove all quads from owl:imports graphs from the current store
+        if (this.config.store) {
+            owlImportsCacheUrls.forEach(url => {
+                const owlImportsGraph = DataFactory.namedNode(url)
+                // Get all quads in the owl:imports graph and remove them
+                const quadsToRemove = this.config.store?.getQuads(null, null, null, owlImportsGraph) || []
+                quadsToRemove.forEach(quad => {
+                    this.config.store?.delete(quad)
+                })
+            })
+        }
+        
+        // Reset the tracked external URLs to allow re-loading owl:imports
+        // Keep non-owl-imports URLs to avoid re-fetching shapes and values
+        this.loadedExternalUrls = this.loadedExternalUrls.filter(url => !owlImportsCacheUrls.has(url))
+        
+        // Dispatch custom event to notify about cache refresh
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('owlImportsCacheCleared', {
+                detail: {
+                    clearedUrls: clearedUrls,
+                    timestamp: new Date()
+                }
+            }))
+        }
+    }
+
+    /**
+     * Reload owl:imports data from all tracked owl:imports URLs
+     * This is called after clearing the cache to fetch fresh data
+     */
+    private async reloadOwlImportsData(): Promise<void> {
+        if (!this.config.store) {
+            return
+        }
+        
+        for (const url of owlImportsCacheUrls) {
+            try {
+                const rdfData = await this.fetchRDF(url)
+                await this.importRDF(rdfData, this.config.store, DataFactory.namedNode(url))
+            } catch (e) {
+                console.error('[Loader] Failed to reload owl:imports from:', url, e)
+            }
+        }
+        
+        // Dispatch event to notify that owl:imports data has been reloaded
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('owlImportsReloaded', {
+                detail: {
+                    timestamp: new Date(),
+                    reloadedUrls: Array.from(owlImportsCacheUrls)
+                }
+            }))
+        }
+    }
+
+    /**
+     * Manually trigger a refresh of owl:imports cache
+     * Use this method to immediately reload owl:imports data without waiting for the interval
+     */
+    async refreshOwlImports(): Promise<void> {
+        this.clearOwlImportsCache()
+        await this.reloadOwlImportsData()
+    }
+
+    /**
+     * Setup listener for manual owl:imports refresh requests
+     * Listen for 'refreshOwlImports' event on the document
+     */
+    private setupOwlImportsRefreshListener(): void {
+        if (typeof window === 'undefined') {
+            return
+        }
+        
+        const handleRefreshRequest = () => {
+            this.refreshOwlImports()
+        }
+        
+        window.addEventListener('refreshOwlImports', handleRefreshRequest)
     }
 }
 
