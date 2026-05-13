@@ -5,16 +5,33 @@
 form { margin-right: 10px; }
 
 shacl-node h1 { font-size: 1.4rem; color: darkslategrey}
-shacl-node .add-button { font-size: 0.9rem; color: darkslategrey; background-color: #b9daf5; border: 2px solid darkslategrey; border-radius: 5px; padding: 5px 8px; }
-shacl-node .add-button:before { content: 'Add '; }
-shacl-node .add-button:hover { color: darkslategrey; background-color: #7dbef3; border: 2px solid darkslategrey; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+/* Add-alternate button: Basisstil */
+shacl-node .add-button {
+  font-size: 1rem;
+  color: steelblue;
+  background-color: transparent;
+  border: none;
+  padding: 2px 6px;
+}
+shacl-node .add-button:hover { color: #444; }
+
+/* Case 1 */
+shacl-property:has(.property-instance) > .add-button { margin-left: auto; margin-right: 0; margin-top: 2px; }
+
+/* Case 2 */
+shacl-property:not(:has(.property-instance)) > .add-button {
+  margin-right: auto;
+  margin-top: 0.2rem;
+  font-size: 1rem;
+  color: steelblue;
+}
 
 /* margin below add-button */
-.add-button:not([hidden]):not([style*="display: none"]) { margin-bottom: 50px; }
+.add-button:not([hidden]):not([style*="display: none"]) { margin-bottom: 10px; }
 .collapsible:not([open]) .add-button { margin-bottom: 0px; }
 
-.shacl-group { margin-bottom: 1em; padding-bottom: 0em; }
-.shacl-group.collapsible[open] { margin-bottom: 50px; background: #f5f5f5; padding-bottom: 30px; box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.3); }
+.shacl-group { margin-bottom: 0.5em; padding-bottom: 0em; }
+.shacl-group.collapsible[open] { margin-bottom: 12px; background: #f5f5f5; padding-bottom: 12px; box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.3); }
 
 .collapsible { padding: 20px 25px; margin-top: 0; background-color: #b9daf5; border: 2px solid darkslategrey; width: 100%; }
 .collapsible:hover, .collapsible[open] { background-color: #7dbef3; box-shadow: 0 5px 10px rgba(0,0,0,0.5); width: 101%; margin-left: -0.5%; position: relative; z-index: 1; }
@@ -29,15 +46,27 @@ shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30p
 .property-instance label { display: inline-block; word-break: break-word; line-height: 1em; padding-top: 0.15em; padding-right: 1em; flex-shrink: 0; position: relative; }
 .mode-edit .property-instance label { width: var(--label-width); }
 .property-instance label, .property-instance label[title] { cursor: default; text-decoration: None; font-weight: 500; }
-.property-instance .quick-add { margin-left: 6px; padding: 2px 6px; border-radius: 4px; border: 1px solid darkslategrey; background-color: #b9daf5; color: darkslategrey; cursor: pointer; }
+.property-instance .quick-add { position: relative; margin-left: 6px; margin-right: 0; padding: 2px 6px; border-radius: 4px; border: 1px solid darkslategrey; background-color: #b9daf5; color: darkslategrey; cursor: pointer; }
 .property-instance .quick-add:hover { background-color: #7dbef3; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .property-instance .quick-add:focus { outline: 2px solid #7dbef3; outline-offset: 1px; }
+.property-instance .quick-add::after { content: attr(title); position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); background: rgba(50,50,50,0.88); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 99; }
+.property-instance .quick-add:hover::after { opacity: 1; }
 
-.property-instance, .shacl-or-constraint .property-instance { 
+.property-instance {
   padding-left: 0.5rem;
-  padding-top: 1rem; 
-  padding-bottom: 1rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
 }
+/* shacl-or-constraint: padding auf dem äußeren Container, nicht auf der inneren
+   property-instance – so beginnt das Label auf derselben horizontalen Position
+   wie bei regulären Feldern */
+.shacl-or-constraint {
+  padding-left: 0.5rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.shacl-or-constraint .property-instance { padding-left: 0; }
+.shacl-or-constraint > div { min-width: 0; }
 .property-instance.valid::before { 
   font-size: 2.0rem; 
   left: calc(var(--label-width) - 3.7em); 
@@ -47,15 +76,14 @@ shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30p
   height: 2em !important;
 }
 
-.editor:not([type='checkbox']), .shacl-or-constraint select { 
-  font-size: 1.0rem; 
-  border-radius: 4px; 
-  border: solid 0.5px gray; 
+.editor:not([type='checkbox']), .shacl-or-constraint select {
+  font-size: 1.0rem;
+  border-radius: 4px;
+  border: solid 0.5px gray;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
 }
-input.editor { width: 50%; }
-select.editor { width: 30%; }
-.shacl-or-constraint * > select.editor { width: 50%; }
-textarea.editor { width: 60%; }
 
 .lang-chooser { font-size: 0.7em; top: 8px; right: 30px; padding: 4px 6px; border-radius: 4px; border: solid 0.5px gray; }
 
@@ -66,15 +94,14 @@ rokit-collapsible {
 }
 
 /* gleiche Grundfarbe */
-rokit-collapsible.collapsible,
-rokit-select.add-button {
+rokit-collapsible.collapsible {
   background: #b9daf5;
 }
+rokit-select.add-button { background: transparent; }
 
 /* gleiche Hoverfarbe */
 rokit-collapsible.collapsible:hover,
-rokit-collapsible.collapsible[open],
-rokit-select.add-button:hover {
+rokit-collapsible.collapsible[open] {
   background: #7dbef3;
 }
 

@@ -209,6 +209,7 @@ export class MermeidTheme extends Theme {
     createListEditor(label: string, value: Term | null, required: boolean, listEntries: InputListEntry[], template?: ShaclPropertyTemplate): HTMLElement {
         const editor = new RokitSelect()
         editor.clearable = true
+        editor.dense = true
         const result = this.createDefaultTemplate(label, null, required, editor, template)
         const quickAddAllowlist = (globalThis as any).__MERMEID_ENTITY_TYPE_ALLOWLIST__ as string[] | undefined
         if (template?.class && template.config.editMode && !template.readonly && Array.isArray(quickAddAllowlist) && quickAddAllowlist.includes(template.class.value)) {
