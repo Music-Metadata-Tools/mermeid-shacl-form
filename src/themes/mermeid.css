@@ -51,6 +51,7 @@ shacl-property.collapsible[open] { background-color: #ebebeb; margin-bottom: 30p
 .property-instance .quick-add:focus { outline: 2px solid #7dbef3; outline-offset: 1px; }
 .property-instance .quick-add::after { content: attr(title); position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); background: rgba(50,50,50,0.88); color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 99; }
 .property-instance .quick-add:hover::after { opacity: 1; }
+.property-instance .quick-add:disabled { opacity: 0.4; cursor: not-allowed; background-color: #b9daf5; }
 
 .property-instance {
   padding-left: 0.5rem;
