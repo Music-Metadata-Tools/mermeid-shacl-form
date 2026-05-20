@@ -44,8 +44,7 @@ shacl-property:not(:has(.property-instance)) > .add-button {
   background-color: #7dbef3; 
   box-shadow: 0 5px 10px rgba(0,0,0,0.5); 
   width: 101%; margin-left: -0.5%; 
-  position: relative; 
-  z-index: 1; }
+}
 
 .collapsible > shacl-property { margin-left: 50px; }
 shacl-property.collapsible[open] { 
