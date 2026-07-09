@@ -1,75 +1,79 @@
 import { Term } from '@rdfjs/types'
-import { ShaclPropertyTemplate } from "../property-template"
-import { Editor, InputListEntry, Theme } from "../theme"
-import { PREFIX_SHACL, PREFIX_XSD, XSD_DATATYPE_STRING  } from '../constants'
-import { Literal, NamedNode } from 'n3'
-import { Term as N3Term }  from 'n3'
-import css from './mermeid.css?raw'
-import { RokitInput, RokitSelect, RokitTextArea } from '@ro-kit/ui-widgets'
+import { aggregatedMinCount, ShaclPropertyTemplate } from "./property-template"
+import { Editor, InputListEntry, Theme } from "./theme"
+import { PREFIX_SHACL, PREFIX_XSD, SHACL_OBJECT_IRI, XSD_DATATYPE_BOOLEAN } from './constants'
+import { DataFactory, Literal, NamedNode } from 'n3'
+import { Term as N3Term } from 'n3'
+import { RokitButton, RokitInput, RokitSelect, RokitTextArea } from '@ro-kit/ui-widgets'
+import { findLabel, formatXsdDateTimeValueForInput, formatXsdDateValueForInput } from './util'
 
-// Tracks how many quick-add dialogs are currently open (supports nesting).
-// All registered quick-add buttons are disabled while this is > 0.
-let _quickAddOpenCount = 0
-const _quickAddButtons = new Set<HTMLButtonElement>()
+const css = `
+.editor:not([type='checkbox']) { border: 1px solid var(--shacl-border-color, #DDD); }
+.property-instance label { display: inline-flex; word-break: break-word; line-height: 1em; padding-top: 0.15em; padding-right: 1em; flex-shrink: 0; position: relative; }
+.property-instance:not(:first-child) > label:not(.persistent) { visibility: hidden; max-height: 0; }
+.mode-edit .property-instance label { width: var(--label-width); }
+`
 
-function _setAllQuickAddButtonsDisabled(disabled: boolean) {
-    for (const btn of _quickAddButtons) {
-        if (btn.isConnected) {
-            btn.disabled = disabled
-        } else {
-            _quickAddButtons.delete(btn)
-        }
-    }
-}
-
-document.addEventListener('shacl-form:quick-add-closed', () => {
-    _quickAddOpenCount = Math.max(0, _quickAddOpenCount - 1)
-    if (_quickAddOpenCount === 0) {
-        _setAllQuickAddButtonsDisabled(false)
-    }
-})
-
-// Theme copied from default.ts. Refer to it for changes and updates.
-
-export class MermeidTheme extends Theme {
+export class DefaultTheme extends Theme {
     idCtr = 0
 
-    constructor(overiddenCss?: string) {
-        super(overiddenCss ? overiddenCss : css)
+    constructor(overriddenCss?: string) {
+        super(overriddenCss ? overriddenCss : css)
     }
 
     createDefaultTemplate(label: string, value: Term | null, required: boolean, editor: Editor, template?: ShaclPropertyTemplate): HTMLElement {
         editor.id = `e${this.idCtr++}`
         editor.classList.add('editor')
+        editor.setAttribute('part', 'editor')
         if (template?.datatype) {
             // store datatype on editor, this is used for RDF serialization
             editor.shaclDatatype = template.datatype
         } else if (value instanceof Literal) {
             editor.shaclDatatype = value.datatype
         }
-        if (template?.minCount !== undefined) {
-            editor.dataset.minCount = String(template.minCount)
+        if (template && aggregatedMinCount(template) > 0) {
+            editor.dataset.minCount = String(aggregatedMinCount(template))
         }
         if (template?.class) {
             editor.dataset.class = template.class.value
         }
         if (template?.nodeKind) {
             editor.dataset.nodeKind = template.nodeKind.value
-        } else if (value instanceof NamedNode) {
+        } else if (value && (value instanceof NamedNode || template?.nodeKind?.equals(SHACL_OBJECT_IRI))) {
             editor.dataset.nodeKind = PREFIX_SHACL + 'IRI'
+            // try to find label for term
+            if (template) {
+                const label = findLabel(template.config.store.getQuads(value, null, null, null), template.config.languages)
+                if (label) {
+                    // replace value by label and set real value as data-link
+                    editor.dataset.value = '<' + value.value + '>'
+                    value = DataFactory.literal(label)
+                }
+            }
         }
-        if (template?.hasValue || template?.readonly) {
+        if ((template?.hasValue && value) || template?.readonly) {
             editor.disabled = true
         }
-        editor.value = value?.value || template?.defaultValue?.value || ''
-    
+        
+        const defaultValue = value?.value || template?.defaultValue?.value || ''
+        if (template?.datatype?.equals(XSD_DATATYPE_BOOLEAN)) {
+            editor.checked = value?.value === 'true' || template?.defaultValue?.value === 'true'
+        } else if (editor.type === 'file') {
+            // Browsers do not allow pre-populating file inputs. Keep the existing
+            // RDF value separately so base64Binary fields can still round-trip.
+            editor.binaryData = defaultValue || undefined
+        } else {
+            editor.value = defaultValue
+        }
+
         const labelElem = document.createElement('label')
         labelElem.htmlFor = editor.id
         labelElem.innerText = label
+        labelElem.setAttribute('part', 'label')
         if (template?.description) {
             labelElem.setAttribute('title', template.description.value)
         }
-    
+
         const placeholder = template?.description ? template.description.value : template?.pattern ? template.pattern : null
         if (placeholder) {
             editor.setAttribute('placeholder', placeholder)
@@ -78,8 +82,9 @@ export class MermeidTheme extends Theme {
             editor.setAttribute('required', 'true')
             labelElem.classList.add('required')
         }
-    
+
         const result = document.createElement('div')
+        result.setAttribute('part', 'field')
         result.appendChild(labelElem)
         result.appendChild(editor)
         return result
@@ -87,7 +92,7 @@ export class MermeidTheme extends Theme {
 
     createDateEditor(label: string, value: Term | null, required: boolean, template: ShaclPropertyTemplate): HTMLElement {
         const editor = new RokitInput()
-        if (template.datatype?.value  === PREFIX_XSD + 'dateTime') {
+        if (template.datatype?.value === PREFIX_XSD + 'dateTime') {
             editor.type = 'datetime-local'
             // this enables seconds in dateTime input
             editor.setAttribute('step', '1')
@@ -96,20 +101,20 @@ export class MermeidTheme extends Theme {
             editor.type = 'date'
         }
         editor.clearable = true
-        editor.dense = true
+        editor.dense = this.dense
         editor.classList.add('pr-0')
         const result = this.createDefaultTemplate(label, null, required, editor, template)
         if (value) {
-            try {
-                let isoDate = new Date(value.value).toISOString()
-                if (template.datatype?.value  === PREFIX_XSD + 'dateTime') {
-                    isoDate = isoDate.slice(0, 19)
-                } else {
-                    isoDate = isoDate.slice(0, 10)
+            const formattedValue = template.datatype?.value === PREFIX_XSD + 'dateTime'
+                ? formatXsdDateTimeValueForInput(value.value)
+                : formatXsdDateValueForInput(value.value)
+            if (formattedValue) {
+                editor.value = formattedValue.value
+                if (formattedValue.suffix) {
+                    editor.dataset.xsdTemporalSuffix = formattedValue.suffix
                 }
-                editor.value = isoDate
-            } catch(ex) {
-                console.error(ex, value)
+            } else {
+                console.error('unable to parse xsd date literal', value)
             }
         }
         return result
@@ -124,7 +129,7 @@ export class MermeidTheme extends Theme {
         else {
             editor = new RokitInput()
         }
-        editor.dense = true
+        editor.dense = this.dense
         if (template.pattern) {
             editor.pattern = template.pattern
         }
@@ -156,10 +161,15 @@ export class MermeidTheme extends Theme {
         }
         langChooser.title = 'Language of the text'
         langChooser.classList.add('lang-chooser')
+        langChooser.setAttribute('part', 'lang-chooser')
         langChooser.slot = 'suffix'
+        // langChooser is required when editor contains text
+        editor.addEventListener('change', () => {
+            langChooser.required = editor.value !== ''
+        })
         // if lang chooser changes, fire a change event on the text input instead. this is for shacl validation handling.
         langChooser.addEventListener('change', (ev) => {
-            ev.stopPropagation();
+            ev.stopPropagation()
             if (editor) {
                 editor.dataset.lang = langChooser.value
                 editor.dispatchEvent(new Event('change', { bubbles: true }))
@@ -177,9 +187,9 @@ export class MermeidTheme extends Theme {
         const editor = document.createElement('input')
         editor.type = 'checkbox'
         editor.classList.add('ml-0')
-    
+
         const result = this.createDefaultTemplate(label, null, required, editor, template)
-    
+
         // 'required' on checkboxes forces the user to tick the checkbox, which is not what we want here
         editor.removeAttribute('required')
         result.querySelector(':scope label')?.classList.remove('required')
@@ -202,7 +212,7 @@ export class MermeidTheme extends Theme {
                     editor.parentElement?.dispatchEvent(new Event('change', { bubbles: true }))
                 }
             } else {
-                (editor as Editor)['binaryData'] = undefined               
+                (editor as Editor)['binaryData'] = undefined
             }
         })
         return this.createDefaultTemplate(label, value, required, editor, template)
@@ -212,7 +222,7 @@ export class MermeidTheme extends Theme {
         const editor = new RokitInput()
         editor.type = 'number'
         editor.clearable = true
-        editor.dense = true
+        editor.dense = this.dense
         editor.classList.add('pr-0')
         const min = template.minInclusive !== undefined ? template.minInclusive : template.minExclusive !== undefined ? template.minExclusive + 1 : undefined
         const max = template.maxInclusive !== undefined ? template.maxInclusive : template.maxExclusive !== undefined ? template.maxExclusive - 1 : undefined
@@ -223,7 +233,7 @@ export class MermeidTheme extends Theme {
             editor.max = String(max)
         }
         if (template.datatype?.value !== PREFIX_XSD + 'integer') {
-            editor.step = '0.1'
+            editor.step = 'any'
         }
         return this.createDefaultTemplate(label, value, required, editor, template)
     }
@@ -231,41 +241,8 @@ export class MermeidTheme extends Theme {
     createListEditor(label: string, value: Term | null, required: boolean, listEntries: InputListEntry[], template?: ShaclPropertyTemplate): HTMLElement {
         const editor = new RokitSelect()
         editor.clearable = true
-        editor.dense = true
+        editor.dense = this.dense
         const result = this.createDefaultTemplate(label, null, required, editor, template)
-        const quickAddAllowlist = (globalThis as any).__MERMEID_ENTITY_TYPE_ALLOWLIST__ as string[] | undefined
-        const classIriForCheck = template?.class?.value
-        const isAllowlisted = Array.isArray(quickAddAllowlist) && classIriForCheck !== undefined
-            && (quickAddAllowlist.includes(classIriForCheck) || quickAddAllowlist.includes(classIriForCheck.replace(/Entity$/, '')))
-        if (template?.class && template.config.editMode && !template.readonly && isAllowlisted) {
-            const classIri = template.class.value
-            const quickAddButton = document.createElement('button')
-            quickAddButton.type = 'button'
-            quickAddButton.classList.add('quick-add')
-            quickAddButton.title = `Create new ${label}`
-            quickAddButton.setAttribute('aria-label', `Create new ${label}`)
-            quickAddButton.innerHTML = '&#xFF0B;'
-            _quickAddButtons.add(quickAddButton)
-            if (_quickAddOpenCount > 0) quickAddButton.disabled = true
-            quickAddButton.addEventListener('click', (event) => {
-                if (quickAddButton.disabled) return
-                event.preventDefault()
-                event.stopPropagation()
-                _quickAddOpenCount++
-                _setAllQuickAddButtonsDisabled(true)
-                editor.dispatchEvent(new CustomEvent('shacl-form:quick-add', {
-                    detail: {
-                        classIri,
-                        path: template.path || null,
-                        label,
-                        editorId: editor.id,
-                    },
-                    bubbles: true,
-                    composed: true,
-                }))
-            })
-            editor.insertAdjacentElement('afterend', quickAddButton)
-        }
         const ul = document.createElement('ul')
         let isFlatList = true
 
@@ -275,11 +252,9 @@ export class MermeidTheme extends Theme {
                 li.dataset.value = entry.value
                 li.innerText = entry.label ? entry.label : entry.value
             } else {
-                if (entry.value instanceof Literal && entry.value.datatype.equals(XSD_DATATYPE_STRING)) {
-                    li.dataset.value = entry.value.value
-                } else {
-                    // this is needed for typed rdf literals
-                    li.dataset.value = (entry.value as N3Term).id
+                li.dataset.value = (entry.value as N3Term).id
+                if (entry.value instanceof NamedNode) {
+                    li.dataset.value = '<' + li.dataset.value + ">"
                 }
                 li.innerText = entry.label ? entry.label : entry.value.value
             }
@@ -302,8 +277,12 @@ export class MermeidTheme extends Theme {
         }
 
         editor.appendChild(ul)
+        value = value ?? template?.defaultValue ?? null
         if (value) {
-            editor.value = value.value
+            editor.value = (value as N3Term).id
+            if (value instanceof NamedNode) {
+                editor.value = '<' + editor.value + ">"
+            }
         }
         return result
     }
@@ -479,10 +458,16 @@ export class MermeidTheme extends Theme {
         return result
     }
 
-    createButton(label: string, _: boolean): HTMLElement {
-        const button = document.createElement('button')
-        button.type = 'button'
+    createButton(label: string, primary: boolean): HTMLElement {
+        const button = new RokitButton()
+        button.dense = this.dense
         button.innerHTML = label
+        if (primary) {
+            button.setAttribute('primary', '')
+            button.setAttribute('part', 'button primary')
+        } else {
+            button.setAttribute('part', 'button')
+        }
         return button
     }
 }

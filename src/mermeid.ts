@@ -1,13 +1,37 @@
 import { Term } from '@rdfjs/types'
-import { ShaclPropertyTemplate } from "../property-template"
-import { Editor, InputListEntry, Theme } from "../theme"
-import { PREFIX_SHACL, PREFIX_XSD } from '../constants'
+import { ShaclPropertyTemplate } from "./property-template"
+import { Editor, InputListEntry, Theme } from "./theme"
+import { PREFIX_SHACL, PREFIX_XSD, XSD_DATATYPE_STRING  } from './constants'
 import { Literal, NamedNode } from 'n3'
 import { Term as N3Term }  from 'n3'
-import css from './default.css?raw'
+import css from './mermeid.css?raw'
 import { RokitInput, RokitSelect, RokitTextArea } from '@ro-kit/ui-widgets'
 
-export class DefaultTheme extends Theme {
+// Tracks how many quick-add dialogs are currently open (supports nesting).
+// All registered quick-add buttons are disabled while this is > 0.
+let _quickAddOpenCount = 0
+const _quickAddButtons = new Set<HTMLButtonElement>()
+
+function _setAllQuickAddButtonsDisabled(disabled: boolean) {
+    for (const btn of _quickAddButtons) {
+        if (btn.isConnected) {
+            btn.disabled = disabled
+        } else {
+            _quickAddButtons.delete(btn)
+        }
+    }
+}
+
+document.addEventListener('shacl-form:quick-add-closed', () => {
+    _quickAddOpenCount = Math.max(0, _quickAddOpenCount - 1)
+    if (_quickAddOpenCount === 0) {
+        _setAllQuickAddButtonsDisabled(false)
+    }
+})
+
+// Theme copied from default.ts. Refer to it for changes and updates.
+
+export class MermeidTheme extends Theme {
     idCtr = 0
 
     constructor(overiddenCss?: string) {
@@ -209,6 +233,40 @@ export class DefaultTheme extends Theme {
         editor.clearable = true
         editor.dense = true
         const result = this.createDefaultTemplate(label, null, required, editor, template)
+        const quickAddAllowlist = (globalThis as any).__MERMEID_ENTITY_TYPE_ALLOWLIST__ as string[] | undefined
+        const classIriForCheck = template?.class?.value
+        const hasAllowlist = Array.isArray(quickAddAllowlist)
+        const isAllowlisted = !hasAllowlist || (classIriForCheck !== undefined
+            && (quickAddAllowlist.includes(classIriForCheck) || quickAddAllowlist.includes(classIriForCheck.replace(/Entity$/, ''))))
+        if (template?.class && template.config.editMode && !template.readonly && isAllowlisted) {
+            const classIri = template.class.value
+            const quickAddButton = document.createElement('button')
+            quickAddButton.type = 'button'
+            quickAddButton.classList.add('quick-add')
+            quickAddButton.title = `Create new ${label}`
+            quickAddButton.setAttribute('aria-label', `Create new ${label}`)
+            quickAddButton.innerHTML = '&#xFF0B;'
+            _quickAddButtons.add(quickAddButton)
+            if (_quickAddOpenCount > 0) quickAddButton.disabled = true
+            quickAddButton.addEventListener('click', (event) => {
+                if (quickAddButton.disabled) return
+                event.preventDefault()
+                event.stopPropagation()
+                _quickAddOpenCount++
+                _setAllQuickAddButtonsDisabled(true)
+                editor.dispatchEvent(new CustomEvent('shacl-form:quick-add', {
+                    detail: {
+                        classIri,
+                        path: template.path || null,
+                        label,
+                        editorId: editor.id,
+                    },
+                    bubbles: true,
+                    composed: true,
+                }))
+            })
+            editor.insertAdjacentElement('afterend', quickAddButton)
+        }
         const ul = document.createElement('ul')
         let isFlatList = true
 
@@ -218,9 +276,11 @@ export class DefaultTheme extends Theme {
                 li.dataset.value = entry.value
                 li.innerText = entry.label ? entry.label : entry.value
             } else {
-                li.dataset.value = (entry.value as N3Term).id
-                if (entry.value instanceof NamedNode) {
-                    li.dataset.value = '<' + li.dataset.value + ">"
+                if (entry.value instanceof Literal && entry.value.datatype.equals(XSD_DATATYPE_STRING)) {
+                    li.dataset.value = entry.value.value
+                } else {
+                    // this is needed for typed rdf literals
+                    li.dataset.value = (entry.value as N3Term).id
                 }
                 li.innerText = entry.label ? entry.label : entry.value.value
             }
@@ -244,7 +304,7 @@ export class DefaultTheme extends Theme {
 
         editor.appendChild(ul)
         if (value) {
-            editor.value = (value as N3Term).id
+            editor.value = value.value
         }
         return result
     }
