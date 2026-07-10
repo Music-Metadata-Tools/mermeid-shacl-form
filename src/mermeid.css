@@ -92,14 +92,14 @@ shacl-property .quick-add:disabled { opacity: 0.4; cursor: not-allowed; backgrou
 
 .property-instance.valid::before {
   margin-top: auto;
-  left: calc(var(--label-width) + 1.0em) !important;
+  left: calc(var(--label-width) - 0.2em) !important;
   width: 1.4em !important; 
-  height: 1.4em !important;
+  height: 1.2em !important;
 }
 
 .validation-error {
   margin-top: auto;
-  left: calc(var(--label-width) + 1.0em) !important;
+  left: calc(var(--label-width) - 0.2em) !important;
 }
 
 #input {
@@ -143,6 +143,10 @@ rokit-collapsible[open]::part(content) {
 rokit-collapsible::part(toggle) {
   --rokit-light-background-darker-color-inner: transparent;
   --rokit-shadow-color-inner: transparent;
+}
+
+.supporting-text {
+  width: 0%
 }
 
 
