@@ -146,7 +146,7 @@ rokit-collapsible::part(toggle) {
 }
 
 .supporting-text {
-  width: 0%
+  display: none;
 }
 
 
