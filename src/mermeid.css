@@ -145,7 +145,7 @@ rokit-collapsible::part(toggle) {
   --rokit-shadow-color-inner: transparent;
 }
 
-rokit-input::part(supportingText) , .editor rokit-input::part(supportingText) {
+rokit-input::part(supportingText) , .editor rokit-input::part(supportingText), div.supporting-text {
   display: none;
 }
 
